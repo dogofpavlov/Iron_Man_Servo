@@ -319,10 +319,6 @@ void playSoundEffect(int soundEffect){
   mp3Obj.wakeup(2);
 
   mp3Obj.playTrack(soundEffect);
-
-  simDelay(200);
-
-  mp3Obj.sleep();
 }
 #endif
 
