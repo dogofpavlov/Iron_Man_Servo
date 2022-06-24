@@ -173,7 +173,6 @@ const int volume = 29; // sound board volume level (30 is max)
 #define SND_OPEN 3 // sound track for helmet opening sound
 
 SoftwareSerial serialObj(rx_pin, tx_pin); // Create object for serial communications
-//DFRobotDFPlayerMini mp3Obj; // Create object for DFPlayer Mini
 DFPlayer mp3Obj;
 #endif
 
