@@ -53,12 +53,14 @@ DEVELOPED BY
 #include <ButtonEvents.h>
 
 #ifdef SOUND
-// See: https://github.com/enjoyneering/DFPlayer
+// See: https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299#target_6
 // Important!!! On the SD card copy the mp3 files into an mp3 directory
-// Download and install the DFPlayer library
+// Download and install the DFPlayerMiniLite library
 
-#include <DFPlayer.h>
-#include <SoftwareSerial.h>
+#include "DFPlayerMiniCW3D.h"
+
+// For installation and usage instructions see: https://github.com/nickgammon/SendOnlySoftwareSerial
+#include <SendOnlySoftwareSerial.h>
 
 #endif
 
@@ -175,8 +177,8 @@ const int volume = 29; // sound board volume level (30 is max)
 #define SND_JARVIS 2 // sound track for JARVIS sound
 #define SND_OPEN 3 // sound track for helmet opening sound
 
-SoftwareSerial serialObj(rx_pin, tx_pin); // Create object for serial communications
-DFPlayer mp3Obj;
+SendOnlySoftwareSerial serialObj(tx_pin);
+DFPlayerMiniCW3D mp3Obj;
 #endif
 
 // Define object for primary button to handle 
@@ -294,33 +296,30 @@ void movieblink(){
  * Initialization method for DFPlayer Mini board
  */
 void init_player(){
-  Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
-
   serialObj.begin(9600);
 
-  mp3Obj.begin(serialObj, MP3_SERIAL_TIMEOUT, MP3_TYPE, false);
+  bool dfInit = mp3Obj.begin(serialObj, false, true);
 
-  mp3Obj.stop();        //if player was runing during ESP8266 reboot
-  mp3Obj.reset();       //reset all setting to default
+  simDelay(1000);
   
-  mp3Obj.setSource(2);  //1=USB-Disk, 2=TF-Card, 3=Aux, 4=Sleep, 5=NOR Flash
-  
-  mp3Obj.setEQ(0);      //0=Off, 1=Pop, 2=Rock, 3=Jazz, 4=Classic, 5=Bass
-  mp3Obj.setVolume(volume); //0..30, module persists volume on power failure
-
-  mp3Obj.sleep();       //inter sleep mode, 24mA
-}
+  if(!dfInit){
+    dfInit = mp3Obj.begin(serialObj, false, true);
+    simDelay(1000); // originally 1000ms
+  }
+   
+  mp3Obj.setTimeOut(500); //Set serial communictaion time out 500ms
+    
+  mp3Obj.volume(volume);
+  //mp3Obj.outputDevice(DFPLAYER_DEVICE_SD);
+ }
 
 /**
  * Method to play the sound effect for a specified feature
  */
 void playSoundEffect(int soundEffect){
-  Serial.print(F("Playing sound effect: "));
-  Serial.println(soundEffect);
-
-  mp3Obj.wakeup(2);
-
-  mp3Obj.playTrack(soundEffect);
+  mp3Obj.volume(volume);
+  simDelay(90);
+  mp3Obj.play(soundEffect);
 }
 #endif
 
@@ -528,7 +527,7 @@ void startupFx(){
 
 #ifdef SOUND
   playSoundEffect(SND_CLOSE);
-  simDelay(500); // Timing for Helmet Close Sound and delay to servo closing
+  simDelay(2900); // Timing for Helmet Close Sound and delay to servo closing
 #endif
 
   facePlateClose();
@@ -560,6 +559,7 @@ void facePlateOpenFx(){
   // TODO: See if we need delays in between fx
 #ifdef SOUND
   playSoundEffect(SND_OPEN);
+  simDelay(2100);
 #endif
 
   ledEyesOff();
@@ -573,7 +573,7 @@ void facePlateOpenFx(){
 void facePlateCloseFx(){
 #ifdef SOUND
   playSoundEffect(SND_CLOSE);
-  simDelay(1200); //Timing for Helmet Close Sound and delay to servo closing
+  simDelay(2900); //Timing for Helmet Close Sound and delay to servo closing
 #endif
 
   facePlateClose();
