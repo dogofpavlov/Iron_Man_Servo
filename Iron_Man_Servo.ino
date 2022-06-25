@@ -298,9 +298,11 @@ void movieblink(){
 void init_player(){
   serialObj.begin(9600);
 
+  simDelay(1000);
+
   bool dfInit = mp3Obj.begin(serialObj, false, true);
 
-  simDelay(2000);
+  simDelay(1000);
   
   if(!dfInit){
     dfInit = mp3Obj.begin(serialObj, false, true);
