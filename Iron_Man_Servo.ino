@@ -300,7 +300,7 @@ void init_player(){
 
   bool dfInit = mp3Obj.begin(serialObj, false, true);
 
-  simDelay(1000);
+  simDelay(2000);
   
   if(!dfInit){
     dfInit = mp3Obj.begin(serialObj, false, true);
