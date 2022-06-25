@@ -164,7 +164,10 @@ unsigned long currentPWM = 0; // keep track of where the current PWM level is at
 boolean isOpen = true; // keep track of whether or not the faceplate is open
 
 #ifdef SOUND
-#define MP3_TYPE DFPLAYER_MINI // Chip type of DFPlayerMini (see documentation)
+#define MP3_TYPE DFPLAYER_MINI // DEFAULT Chip type of DFPlayerMini (see documentation)
+// #define MP3_TYPE DFPLAYER_FN_X10P // Chip type of DFPlayerMini (see documentation)
+// #define MP3_TYPE DFPLAYER_HW_247A // Chip type of DFPlayerMini (see documentation)
+// #define MP3_TYPE DFPLAYER_NO_CHECKSUM // Chip type of DFPlayerMini (see documentation)
 #define MP3_SERIAL_TIMEOUT 100 //average DFPlayer response timeout 100msec..200msec
 // Declare variables for sound control
 const int volume = 29; // sound board volume level (30 is max)
