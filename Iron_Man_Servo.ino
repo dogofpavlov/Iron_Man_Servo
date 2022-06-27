@@ -1,19 +1,15 @@
 /*
  
 MIT License
-
 Copyright (c) 2020 Crash Works 3D
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,19 +17,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
 DESCRIPTION
   ====================
   The purpose of this code is to automate the servos and LED eyes for the Iron Man helmet
-
   Motivation and inspiration comes from the early work by "XL97" of The RPF Community
-
 DEVELOPED BY
   ====================
   Dropwire
   Cranshark
   Taff
-
  */
 // Version.  Don't change unless authorized by Cranshark
 #define VERSION "3.0.0.1"
@@ -42,7 +34,7 @@ DEVELOPED BY
 //#define WALSH85
 
 // Uncomment this line to enable sound for the S.U.E. expansion board
-//#define SOUND     
+#define SOUND     
 
 // Referenced libraries
 // For installation instructions see https://github.com/netlabtoolkit/VarSpeedServo
@@ -51,6 +43,10 @@ DEVELOPED BY
 // For installation instructions see: https://github.com/fasteddy516/ButtonEvents
 #include <Bounce2.h>
 #include <ButtonEvents.h>
+
+//ADDED BY DogOfPavlov (The Cyber Hobbit)
+// For installation instructions see: https://github.com/Arduino-IRremote/Arduino-IRremote
+#include <IRremote.hpp>
 
 #ifdef SOUND
 // See: https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299#target_6
@@ -105,10 +101,10 @@ const int jawOpenSpeed = 255; // set the speed of the Jaw opening for Walsh85 He
 // In Dual Servo Configuration the servos move in opposing directions, so the angles of the servos will be opposite to each other. 
 // Normal Servo range is 0° ~ 180°, for initial setup the range has been adjusted to 20° ~ 160°, this allows for a 20° adjustment at both ends of the servo range.
 // See Helmet tutorial for further information on servo setup.
-const int servo1_OpenPos = 20; // set the open position of servo 1
-const int servo2_OpenPos = 160; // set the open position of servo 2
-const int servo1_ClosePos = 160; // set the closed position of servo 1
-const int servo2_ClosePos = 20; // set the closed position of servo 2
+const int servo1_OpenPos = 0; // set the open position of servo 1
+const int servo2_OpenPos = 180; // set the open position of servo 2
+const int servo1_ClosePos = 170; // set the closed position of servo 1
+const int servo2_ClosePos = 10; // set the closed position of servo 2
 
 #ifdef WALSH85
 //Servo 3 (Walsh85 Jaw Control) Open / Close Angle
@@ -148,7 +144,8 @@ const int setupFx = SETUP_MOVIE_BLINK;
 // const int eyesFx = EYES_MOVIE_BLINK;
 
 // Uncomment this line if you want the fade on special effect during setup, comment this line to disable this effect
-const int eyesFx = EYES_FADE_ON;
+//CHANGED BY DogOfPavlov (The Cyber Hobbit)... the EYES_FADE_ON option seems to disrupt the IR code
+const int eyesFx = EYES_NONE;
 
 // Declare variables for button control
 boolean movieblinkOnClose = false; //Blink LEDs on close of faceplate, Sequence based on Avengers Movie
@@ -388,7 +385,6 @@ void playSoundEffect(int soundEffect){
   #ifdef WALSH85
   servo3.attach(servo3Pin);
   #endif
-
   // Send data to the servos for movement 
 
   #ifdef WALSH85
@@ -653,6 +649,82 @@ void initPrimaryButton(){
   primaryButton.holdTime(2000);
 }
 
+//ADDED BY DogOfPavlov (The Cyber Hobbit) START
+const byte IR_RECEIVE_PIN = 12;
+int lastCommandReceived = 0; //used to ensure one action is taken per IR command
+#define SND_JARVIS_EXTRA_A 4 // sound track for JARVIS "Sir, Agent Colson of shield is on the line."
+#define SND_JARVIS_EXTRA_B 5 // sound track for JARVIS "The clean slate protocol sir?"
+#define SND_JARVIS_EXTRA_C 6 // sound track for JARVIS "That's the emergency alert triggered by the power dropping below 5%."
+#define SND_JARVIS_EXTRA_D 7 // sound track for JARVIS "As always sir, a great pleasure watching you work."
+#define SND_JARVIS_EXTRA_E 8 // sound track for JARVIS "The house party protocol sir?"
+#define SND_JARVIS_EXTRA_F 9 // sound track for JARVIS "Power at 400% capacity."
+
+void monitorIR(){
+  if(IrReceiver.decode()){
+    int ircommand = IrReceiver.decodedIRData.command;
+    Serial.println(ircommand);
+    IrReceiver.resume();
+      
+    if(lastCommandReceived!=ircommand){
+        lastCommandReceived = ircommand;
+
+        //When you press a button on your remote you should see values showing up in the Serial Monitor...
+        switch(ircommand){
+            // IR BUTTON 0 - OPEN FACE
+            case 22: // <--- CHANGE THE # IF DIFFERENT 
+            if(facePlateCurMode == FACEPLATE_CLOSED){
+                facePlateOpenFx();
+            } 
+            break;
+            // IR BUTTON 1 - CLOSE FACE
+            case 12: // <--- CHANGE THE # IF DIFFERENT 
+            if(facePlateCurMode == FACEPLATE_OPEN){
+                facePlateCloseFx();                    
+            }     
+            break;
+            // IR BUTTON 2 - TURN ON EYES
+            case 24: // <--- CHANGE THE # IF DIFFERENT 
+            if(facePlateCurMode == FACEPLATE_CLOSED){
+                ledEyesOn();
+            }
+            break;
+            // IR BUTTON 3 - TURN OFF EYES
+            case 94: // <--- CHANGE THE # IF DIFFERENT 
+            if(facePlateCurMode == FACEPLATE_CLOSED){
+                ledEyesOff();
+            }
+            break; 
+            //PLAYING ADDITIONAL SOUNDS
+            // IR BUTTON 4 
+            case 8: // <--- CHANGE THE # IF DIFFERENT 
+                playSoundEffect(SND_JARVIS_EXTRA_A);
+            break; 
+            // IR BUTTON 5  
+            case 28: // <--- CHANGE THE # IF DIFFERENT 
+                playSoundEffect(SND_JARVIS_EXTRA_B);
+            break; 
+            // IR BUTTON 6    
+            case 90: // <--- CHANGE THE # IF DIFFERENT 
+                playSoundEffect(SND_JARVIS_EXTRA_C);
+            break; 
+            // IR BUTTON 7 
+            case 66:  // <--- CHANGE THE # IF DIFFERENT      
+                playSoundEffect(SND_JARVIS_EXTRA_D);
+            break; 
+            // IR BUTTON 8  
+            case 82: // <--- CHANGE THE # IF DIFFERENT      
+                playSoundEffect(SND_JARVIS_EXTRA_E);
+            break; 
+            // IR BUTTON 9 
+            case 74: // <--- CHANGE THE # IF DIFFERENT      
+                playSoundEffect(SND_JARVIS_EXTRA_F);
+            break; 
+        }    
+    } 
+  }
+}
+//ADDED BY DogOfPavlov (The Cyber Hobbit) END
+
 /**
  * Monitor for when the primary button is pushed
  */
@@ -701,6 +773,9 @@ void setup() {
   pinMode(AuxLED, OUTPUT); // set output for AUX LED
 
   startupFx(); // Run the initial features
+
+  //ADDED BY DogOfPavlov (The Cyber Hobbit)
+  IrReceiver.begin(IR_RECEIVE_PIN); //initialize the IR device
 }
 
 /**
@@ -709,6 +784,9 @@ void setup() {
  */
 void loop() {
   monitorPrimaryButton(); // Since all features currently are tied to the one button...
+
+  //ADDED BY DogOfPavlov (The Cyber Hobbit)
+  monitorIR(); //run the IR Monitor
 
   // Room for future features ;)
 }
