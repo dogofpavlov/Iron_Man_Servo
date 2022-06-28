@@ -65,6 +65,7 @@ You can download the 3D printable servo kit from Thingiverse:
 * Install the [Bounce2](https://github.com/thomasfredericks/Bounce2) library.
 * Install the [ButtonEvents](https://github.com/fasteddy516/ButtonEvents) library.
 * Install the [DFRobotDFPlayerMini](https://github.com/DFRobot/DFRobotDFPlayerMini) library. 
+* Install the [IRremote](https://github.com/Arduino-IRremote/Arduino-IRremote) library.
 * An Arduino Nano board
 * Servos
 * LEDs
